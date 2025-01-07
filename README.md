@@ -9,4 +9,4 @@ A certain amount of joshing should be enabled, as long as nothing is taken too s
 The following references were useful:
 
 - Django documentation.
-- [Tutorial from some blog](https://testdriven.io/blog/django-custom-user-model/)
+- [Tutorial from some blog on Django users](https://testdriven.io/blog/django-custom-user-model/)
