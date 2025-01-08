@@ -9,7 +9,7 @@ from .managers import CustomUserManager
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
-    handle = models.CharField(_('handle'), max_length=30, unique=True)
+    handle = models.CharField(_('handle'), max_length=30, unique=True, blank=True)
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
     is_active = models.BooleanField(_('active'), default=True)
     is_staff = models.BooleanField(_('staff'), default=False)
@@ -17,7 +17,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'handle'
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
     
     objects = CustomUserManager()
