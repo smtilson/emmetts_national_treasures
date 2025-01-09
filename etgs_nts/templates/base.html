@@ -38,34 +38,19 @@
         <div class="collapse navbar-collapse pb-2" id="navbarText">
           <ul class="navbar-nav me-auto mb-2 mb-md-0 mt-md-2">
             <li class="nav-item">
-              <a class="nav-link {% if request.path == index_url %}
-                  active
-                  page
-                {% endif %}" href="{% url 'index' %}">{% if not user.is_guest %}Home{% endif %}</a>
+              <a class="nav-link" href="{% url 'index' %}">Home</a>
             </li>
             {% if user.is_authenticated %}
               <li class="nav-item">
-                <!--    I am using a particular pattern to add classes to the anchor elements, here is an example:#navbarText
-                <a class="nav-link {% if request.path == logout_url %}
-                    active
-                    page
-                  {% endif %}"
-                  href="{% url 'logout' %}">
-                  Logout
-                </a>
-                I am removing it, but leaving it in the comment here.
-                   -->
                 <a class="nav-link" href="{% url 'logout' %}">Logout</a>
               </li>
               <li class="nav-item">
                 <a class="nav-link" href="{% url 'profile' %}">Profile</a>
               </li>
-            {% else %}
+              {% else %}
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'signup' %}">Sign Up!</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{% url 'login' %}">Login</a>
+                <a class="nav-link" href="{% url 'login' %}">Login</a>-->
+                <p>blank</p>
               </li>
             {% endif %}
           </ul>
@@ -106,3 +91,10 @@
     <script src="{% static 'js/scripts.js' %}"></script>
   </body>
 </html>
+<!-- here is a pattern for the active stuff
+<a class="nav-link {% if request.path == index_url %}
+                  active
+                  page
+                {% endif %}" href="{% url 'index' %}">{% if not user.is_guest %}Home{% endif %}</a>
+
+-->
