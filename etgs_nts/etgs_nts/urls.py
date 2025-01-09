@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path("accounts/", include("allauth.urls")),
     path('admin/', admin.site.urls),
-    path("users/", include("users.urls")), # this is a temp name for the dir(?)
+    path("accounts/", include("allauth.urls")), #from allauth
+    path("", include("users.urls")), # this is a temp name for the dir(?)
 ]

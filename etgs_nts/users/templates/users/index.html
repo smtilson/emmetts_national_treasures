@@ -1,0 +1,13 @@
+{% extends 'templates/base.html' %}
+
+{% block content %}
+<h1>Temporary.</h1>
+<div>The path {{path}} was requested.
+{% if is_authenticated %}
+The user is authenticated with email address {{user.email}}.
+The different attrs are {{user.handle}}.
+{% else %}
+The user is NOT authenticated.
+{% endif %}
+</div>
+{% endblock %}
