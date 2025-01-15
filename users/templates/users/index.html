@@ -1,7 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Temporary.</h1>
+<section id="index">
+<h1>Index page in user app</h1>
+<div class="text-center logo-div my-container">
+    <h1 class="logo">Emmett's National Treasures</h1>
+</div>
 <div>The path {{path}} was requested.
 {% if is_authenticated %}
 The user is authenticated with email address {{user.email}}.
@@ -10,4 +14,5 @@ The different attrs are {{user.handle}}.
 The user is NOT authenticated.
 {% endif %}
 </div>
+</section>
 {% endblock %}
