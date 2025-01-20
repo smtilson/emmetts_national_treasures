@@ -10,3 +10,4 @@ The following references were useful:
 
 - Django documentation.
 - [Tutorial from some blog on Django users](https://testdriven.io/blog/django-custom-user-model/)
+- [django-allauth tutorial blog](https://learndjango.com/tutorials/django-allauth-tutorial)
