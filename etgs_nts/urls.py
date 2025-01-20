@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("accounts/", include("allauth.urls")), #from allauth
     path("", include("users.urls")), # this is a temp name for the dir(?)
+    path("treasures/", include("treasures.urls")), # from treasures app
 ]

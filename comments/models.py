@@ -8,6 +8,7 @@ def unknown_author():
     #should this be changed?
     return "Unknown Author"
 class Comment(models.Model):
+    id = models.AutoField(primary_key=True)
     content = models.TextField()
     treasure = models.ForeignKey('treasures.Treasure', on_delete=models.CASCADE)
     author = models.ForeignKey(CustomUser, on_delete=models.SET(unknown_author))

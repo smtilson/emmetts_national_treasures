@@ -7,10 +7,15 @@
       <h1 class="logo">Emmett's National Treasures</h1>
     </div>
     <div class="row my-container">
+      <h2>Debug</h2>
+      This contains basic information about the request for the purpose of debugging.
       The path {{ path }} was requested.{% if not is_authenticated %}
         The user is somehow not authenticated.
       {% else %}
         The registered email address is {{ user.email }}. The user handle is {{ user.handle }}.
+        {% if id %}
+        The id of the user is {{ id }}.
+        {% endif %}
       {% endif %}
     </div>
     <div id="handle-form-div" class="row my-container">
@@ -55,5 +60,13 @@
             <button type="submit" class="btn btn-secondary actual-button" id="add-friend-form-button">Submit</button>
         </form>
     </div>
+    <div id="add-treasure-form-div" class="row my-container">
+      <form action="{% url 'add_treasure' %}" method="POST">
+          {% csrf_token %}
+          {{ treasure_form }}
+          <!-- maybe the below should be an input element of type submit instead, but I think this is fine, we will see -->
+          <button type="submit" class="btn btn-secondary actual-button" id="add-friend-form-button">Submit</button>
+      </form>
+  </div>
 </section>
 {% endblock %}

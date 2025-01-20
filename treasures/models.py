@@ -3,8 +3,10 @@ from users.models import CustomUser
 # Create your models here.
 
 class Treasure(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    category = models.DecimalField(max_digits=10, decimal_places=2)
+    category = models.CharField(max_length=100) # should this be a choice or a list?
+    # lists don't work, so then it would be many to many, and then a separate category model or something.
     creator = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     description = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
