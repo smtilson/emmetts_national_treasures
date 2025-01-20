@@ -36,6 +36,7 @@ def user_page(request):
         "friends": [],
         "id": id,
         "treasure_form": treasure_form,
+        "treasure_list": list(Treasure.objects.filter(creator=user)),
     }
     if not is_authenticated:
         response = render(request, "users/index.html", context)
