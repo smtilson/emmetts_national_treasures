@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <section id="user_page">
+    <h1>User page in user app</h1>
+    <div class="text-center logo-div my-container">
+      <h1 class="logo">Emmett's National Treasures</h1>
+    </div>
+    <div class="row my-container">
+      The path {{ path }} was requested.{% if not is_authenticated %}
+        The user is somehow not authenticated.
+      {% else %}
+        The registered email address is {{ user.email }}. The user handle is {{ user.handle }}.
+      {% endif %}
+    </div>
+    <div id="handle-form-div" class="row my-container">
+      {% if not user.handle %}
+        Add a handle/username so your friends can identify you.
+      {% else %}
+        Care to update your handle?
+      {% endif %}
+      <form action="{% url 'set_handle' %}" method="POST">
+        {% csrf_token %}
+        {% if user.handle %}
+          <label for="handle" id="set-handle-form-label">New Handle:</label><input type="text" name="handle" id="handle" placeholder="{{ user.handle }}" required />
+        {% else %}
+          <label for="handle" id="set-handle-form-label">Handle:</label><input type="text" name="handle" id="handle" required />
+        {% endif %}
+        <button type="submit" class="btn btn-secondary actual-button" id="set-handle-form-button">Submit</button>
+      </form>
+    </div>
+    <div id="friend-list" class="row my-container">
+        {{ friends|length }} friends
+    {% if friends|length != 0 %}
+        <ul>
+        {% for friend in friends %}
+            <li>{{ friend.handle }} at {{ friend.email }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    </div>
+    <div id="add-friend-form-div" class="row my-container">
+        <form action="{% url 'add_friend' %}" method="POST">
+            {% csrf_token %}
+            <label for="friend-handle" id="friend-handle-label">Friends' Handle</label>
+            <input type="text" name="handle" id="friend-handle" placeholder="Handle:" />
+            <label for="friend-email" id="friend-email-label">Friends' Email</label>
+            <input type="text" name="email" id="friend-email" placeholder="Email:" />
+            <label for="search_method" id="add-friend-form-label">Search by:</label>
+
+            <select name="search_method" id="search_method">
+                <option value="handle">Handle</option>
+                <option value="email">Email</option>
+            </select>
+            <button type="submit" class="btn btn-secondary actual-button" id="add-friend-form-button">Submit</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
