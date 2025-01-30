@@ -17,5 +17,14 @@ class Treasure(models.Model):
         msg += f" Their reasoning is that {self.description}."
         return msg
     
+    @property
+    def short_details(self):
+        # the word for should be replaced with a dash
+        return f"{self.name} - {self.category} by {self.creator.handle}"
+    
+    @property
     def abbrev(self):
-        return f"{self.name} - {self.creator.handle} for {self.category}"
+        abbrev = f"{self.name} - {self.creator.handle} for {self.description[:50]}"
+        if len(self.description) > 50:
+            abbrev += "..."
+        return abbrev

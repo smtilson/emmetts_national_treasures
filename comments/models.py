@@ -19,5 +19,11 @@ class Comment(models.Model):
     def __str__(self):
         return f"{self.author.handle} said: {self.content}"
     
+    @property
     def abbrev(self):
-        return f"{self.author.handle} said: {self.content[:50]}"
+        abbrev = f"{self.author.handle} said: {self.content[:50]}"
+        if len(self.content) > 50:
+            abbrev += "..."
+        return abbrev
+    
+    
