@@ -3,7 +3,7 @@ from users.models import CustomUser
 # Create your models here.
 
 class Treasure(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True) #this is not necessary
     name = models.CharField(max_length=100)
     category = models.CharField(max_length=100) # should this be a choice or a list?
     # lists don't work, so then it would be many to many, and then a separate category model or something.
