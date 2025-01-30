@@ -39,10 +39,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    
     "rest_framework", # django rest framework
     "allauth", #all auth, is this still relevant if I am moving to django rest?
     "allauth.account", #all auth account
     "allauth.socialaccount", #all auth social account
+    
+    "api", # custom app
     "users",  # custom app
     "comments",  # custom app
     "treasures",  # custom app
