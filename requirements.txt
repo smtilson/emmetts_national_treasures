@@ -2,3 +2,6 @@ django
 django-crispy-forms
 django-extensions
 django-allauth
+djangorestframework
+environs
+ipython
