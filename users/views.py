@@ -75,6 +75,7 @@ def set_handle(request):
 
 
 def add_friend(request):
+    #this is rudimentary and should be redone with friend requests or something like that.
     user = request.user
     search_method = request.POST["search_method"]
     search_term = request.POST.get(search_method, None)
