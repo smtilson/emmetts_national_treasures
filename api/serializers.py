@@ -10,7 +10,6 @@ class TreasureSerializer(serializers.ModelSerializer):
         model = Treasure
         fields = ["id","name","creator","category", "description","date_added","last_modified"]
         
-        
 class CommentSerializer(serializers.ModelSerializer):
     creator = serializers.StringRelatedField()
     class Meta:
