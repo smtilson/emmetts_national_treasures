@@ -8,12 +8,4 @@ class TreasureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Treasure
-        fields = [
-            "id",
-            "name",
-            "creator",
-            "category",
-            "description",
-            "date_added",
-            "last_modified",
-        ]
+        fields = "__all__"
