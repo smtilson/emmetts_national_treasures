@@ -13,7 +13,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
-        return Comment.objects.filter(post=self.kwargs["post_pk"])
+        return Comment.objects.filter(treasure=self.kwargs["treasue_pk"])
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
