@@ -90,7 +90,7 @@ def set_handle(request):
     return response
 
 
-def find_user_by_handle(request):
+def find_user(request):
     user = request.user
     search_method = request.POST["search_method"]
     search_term = request.POST.get(search_method, None)
@@ -105,7 +105,7 @@ def find_user_by_handle(request):
 def add_friend_request(request):
     # this is rudimentary and should be redone with friend requests or something like that.
     user = request.user
-    friend, msg, msg_type = find_user_by_handle(request)
+    friend, msg, msg_type = find_user(request)
     if msg_type == messages.SUCCESS:
         msg_type, msg = FriendshipRequest.create_request(user, friend)
     messages.add_message(request, msg_type, msg)
@@ -120,15 +120,3 @@ def add_friend_request(request):
         msg = "You must be logged in to add a friend."
         messages.add_message(request, messages.INFO, msg)
     """
-
-
-def add_treasure(request):
-    if request.method == "POST":
-        form = TreasureCreationForm(request.POST)
-        if form.is_valid():
-            treasure = form.save(commit=False)
-            treasure.creator = request.user
-            treasure.save()
-            msg = f"Treasure {treasure.name} added."
-            messages.add_message(request, messages.SUCCESS, msg)
-    return HttpResponseRedirect(reverse("user_page"))

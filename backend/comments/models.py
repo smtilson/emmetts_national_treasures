@@ -15,6 +15,10 @@ class Comment(models.Model):
     treasure = models.ForeignKey("treasures.Treasure", on_delete=models.CASCADE)
     author = models.ForeignKey(CustomUser, on_delete=models.SET(unknown_author))
     date_added = models.DateTimeField(auto_now_add=True)
+    # no replies yet.
+    # reply_to = models.ForeignKey(
+    #    "self", on_delete=models.SET_NULL, null=True, default=None
+    # )
 
     def __str__(self):
         return f"{self.author.handle} said: {self.content}"
