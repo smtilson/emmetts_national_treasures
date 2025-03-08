@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -9,7 +9,7 @@ from treasures.models import Treasure
 
 
 # Create your views here.
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
