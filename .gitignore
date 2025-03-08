@@ -198,6 +198,3 @@ dist-ssr
 *.sln
 *.sw?
 
-
-# misc
-progress.md
