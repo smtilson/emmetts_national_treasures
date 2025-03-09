@@ -12,9 +12,9 @@ So what is necessary:
 - Treasure model
 - Comment model
 
-## Planning
+## Planning/To-Do's
 
-
+- Translation? Django has a tool for this, and so does react, I guess I would need to do both.
 
 ## Branches
 
@@ -34,6 +34,8 @@ I don't think I need to worry about filtering. Permissions can be put in later. 
 
 ##### Users
 
-What is the deal with my user class and the manager I have? what is the motiviation for having it?
+What is the deal with my user class and the manager I have? what is the motiviation for having it? I think it is to have the username login credential be the email address.
+
+Wrote initial tests for user model.
 
 ### Frontend

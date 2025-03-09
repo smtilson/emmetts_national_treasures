@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
+
 # Create your models here.
 
 from .managers import CustomUserManager
@@ -11,13 +12,13 @@ from .managers import CustomUserManager
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
-    handle = models.CharField(_("handle"), max_length=30, unique=True, blank=True)
+    handle = models.CharField(
+        _("handle"), max_length=30, unique=True, blank=True, null=True
+    )
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
     is_active = models.BooleanField(_("active"), default=True)
     is_staff = models.BooleanField(_("staff"), default=False)
     friends = models.ManyToManyField("self", symmetrical=False, blank=True)
-
-    objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -25,7 +26,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.handle
+        if self.handle:
+            return self.handle
+        return self.email.split("@")[0]
 
     def add_friend(self, friend):
         self.friends.add(friend)
