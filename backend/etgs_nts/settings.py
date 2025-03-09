@@ -44,8 +44,6 @@ INSTALLED_APPS = [
     "allauth", #all auth, is this still relevant if I am moving to django rest?
     "allauth.account", #all auth account
     "allauth.socialaccount", #all auth social account
-    
-    "api", # custom app
     "users",  # custom app
     "comments",  # custom app
     "treasures",  # custom app
@@ -154,7 +152,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+'''
+Static directories and files removed as the plan is for the frontend to be made with react.
 STATIC_URL = "static/"
 
 STATICFILES_DIRS = [
@@ -162,7 +161,7 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
+'''
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

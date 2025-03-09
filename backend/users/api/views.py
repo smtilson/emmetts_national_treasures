@@ -120,3 +120,11 @@ def add_friend_request(request):
         msg = "You must be logged in to add a friend."
         messages.add_message(request, messages.INFO, msg)
     """
+
+
+def add_friend(request):
+    return Response("<div>add_friend view triggered</div>")
+
+
+def add_treasure(request):
+    return Response("<div>add_treasure view triggered</div>")
