@@ -15,9 +15,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     handle = models.CharField(
         _("handle"), max_length=30, unique=True, blank=True, null=True
     )
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
-    is_active = models.BooleanField(_("active"), default=True)
-    is_staff = models.BooleanField(_("staff"), default=False)
     friends = models.ManyToManyField("self", symmetrical=False, blank=True)
 
     USERNAME_FIELD = "email"
@@ -41,9 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         count = cls.dummy_count()
         email = f"dummy{count}@example.com"
         handle = f"dummy_{count}"
-        user = User.objects.create_user(
-            email=email, password="password", handle=handle
-        )
+        user = User.objects.create_user(email=email, password="password", handle=handle)
         return user
 
     @classmethod
