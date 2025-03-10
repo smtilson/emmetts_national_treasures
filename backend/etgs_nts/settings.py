@@ -1,4 +1,5 @@
 import os
+
 """
 Django settings for etgs_nts project.
 
@@ -39,17 +40,16 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
-    
-    "rest_framework", # django rest framework
-    "allauth", #all auth, is this still relevant if I am moving to django rest?
-    "allauth.account", #all auth account
-    "allauth.socialaccount", #all auth social account
+    "rest_framework",  # django rest framework
+    "allauth",  # all auth, is this still relevant if I am moving to django rest?
+    "allauth.account",  # all auth account
+    "allauth.socialaccount",  # all auth social account
     "users",  # custom app
     "comments",  # custom app
     "treasures",  # custom app
 ]
 
-AUTH_USER_MODEL = "users.CustomUser"
+AUTH_USER_MODEL = "users.User"
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -78,7 +78,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    
 ]
 
 ROOT_URLCONF = "etgs_nts.urls"
@@ -116,9 +115,6 @@ DATABASES = {
     }
 }
 
-
-AUTH_USER_MODEL = "users.CustomUser"
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -152,7 +148,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-'''
+"""
 Static directories and files removed as the plan is for the frontend to be made with react.
 STATIC_URL = "static/"
 
@@ -161,7 +157,7 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-'''
+"""
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

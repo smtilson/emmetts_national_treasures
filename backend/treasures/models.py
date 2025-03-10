@@ -1,6 +1,9 @@
 from django.db import models
-from users.models import CustomUser
+from django.contrib.auth import get_user_model
+
 # Create your models here.
+
+User = get_user_model()
 
 
 class Treasure(models.Model):
@@ -8,7 +11,7 @@ class Treasure(models.Model):
     name = models.CharField(max_length=100)
     category = models.CharField(max_length=100)  # should this be a choice or a list?
     # lists don't work, so then it would be many to many, and then a separate category model or something.
-    creator = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField()
     date_added = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)

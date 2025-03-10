@@ -9,8 +9,11 @@ from rest_framework.permissions import IsAuthenticated
 
 from treasures.models import Treasure
 from treasures.forms import TreasureCreationForm
-from .serializers import CustomUserSerializer
-from ..models import CustomUser, FriendshipRequest
+from .serializers import UserSerializer
+from ..models import FriendshipRequest
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 # need to add things that check request.method and then redirect and what not.
@@ -18,9 +21,9 @@ from ..models import CustomUser, FriendshipRequest
 
 
 # Create your views here.
-class CustomUserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
-    serializer_class = CustomUserSerializer
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
 def index(request):
