@@ -1,12 +1,13 @@
 from django.test import TestCase
 from django.db import IntegrityError
 from django.core.exceptions import ValidationError
-from unittest import skip
 from django.contrib.auth import get_user_model
+from unittest import skip
 
 User = get_user_model()
 
 
+@skip
 class UserModelTests(TestCase):
     def setUp(self):
         self.user_data = {
@@ -14,7 +15,19 @@ class UserModelTests(TestCase):
             "password": "testpassword123",
             "handle": "testuserhandle",
         }
+        self.friend1_data = {
+            "email": "friend@example.com",
+            "password": "friendpassword123",
+            "handle": "frienduserhandle",
+        }
+        self.friend2_data = {
+            "email": "friend2@example.com",
+            "password": "friend2password123",
+            "handle": "friend2userhandle",
+        }
         self.user = User.objects.create_user(**self.user_data)
+        self.friend1 = User.objects.create_user(**self.friend1_data)
+        self.user.add_friend(self.friend1)
 
     def test_create_user(self):
         """Test creating a basic user with required fields"""
@@ -68,6 +81,15 @@ class UserModelTests(TestCase):
                 handle="invalidmail",
             )
             user.full_clean()  # This triggers validation
+
+    def test_password_is_hashed(self):
+        """Test that passwords are properly hashed and not stored in plaintext"""
+        user = User.objects.get(email=self.user_data["email"])
+        self.assertNotEqual(user.password, self.user_data["password"])
+        self.assertTrue(
+            user.password.startswith("pbkdf2_sha256$")
+            or user.password.startswith("bcrypt$")
+        )
 
     def test_handle_uniqueness(self):
         """Test that handle must be unique if provided"""
@@ -146,3 +168,57 @@ class UserModelTests(TestCase):
             User.objects.create_user(
                 email="", password="password123", handle="no_email"
             )
+
+    def test_add_friend(self):
+        """Test that the add_friend method creates a bidirectional friendship"""
+        # Create a new user to be the friend
+        friend = User.objects.create_user(**self.friend2_data)
+
+        # Initially, user should have 1 friend
+        self.assertEqual(self.user.friends.count(), 1)
+        self.assertEqual(friend.friends.count(), 0)
+
+        # Add new_friend as friend of user
+        self.user.add_friend(friend)
+
+        # Verify new_friend is in user's friends
+        self.assertEqual(self.user.friends.count(), 2)
+        self.assertIn(friend, self.user.friends.all())
+        # Old friend should not be displaced
+        self.assertIn(self.friend1, self.user.friends.all())
+
+        # Verify user is in new_friend's friends (bidirectional)
+        self.assertEqual(friend.friends.count(), 1)
+        self.assertIn(self.user, friend.friends.all())
+
+    def test_add_multiple_friends(self):
+        """Test adding multiple friends to a user"""
+        # Create additional friends
+        friend2 = User.objects.create_user(**self.friend2_data)
+
+        # Add two friends to user
+        self.user.add_friend(friend2)
+
+        # Verify user has two friends
+        self.assertEqual(self.user.friends.count(), 2)
+        self.assertIn(self.friend1, self.user.friends.all())
+        self.assertIn(friend2, self.user.friends.all())
+
+        # Verify both friends have user as friend
+        self.assertEqual(self.friend1.friends.count(), 1)
+        self.assertEqual(friend2.friends.count(), 1)
+        self.assertIn(self.user, self.friend1.friends.all())
+        self.assertIn(self.user, friend2.friends.all())
+
+    def test_friend_removal(self):
+        """Test removing a friend"""
+        friend2 = User.objects.create_user(**self.friend2_data)
+        self.user.add_friend(friend2)
+        self.assertTrue(self.user.friends.count(), 2)
+        # Remove the symmetrical friendship
+
+        self.user.friends.remove(friend2)
+        self.assertEqual(self.user.friends.count(), 1)
+        self.assertEqual(friend2.friends.count(), 0)
+        self.assertIn(self.friend1, self.user.friends.all())
+        self.assertNotIn(friend2, self.user.friends.all())

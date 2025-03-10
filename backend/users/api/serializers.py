@@ -9,17 +9,23 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = "__all__"
-        read_only_fields = [
-            "id",
+        exclude = [
+            "password",
             "groups",
             "user_permissions",
-            "is_staff",
-            "is_superuser",
-            "is_active",
-            "date_joined",
-            "last_login",
         ]
+        read_only_fields = [
+            "id",
+            "is_staff",
+            "is_active",
+            "is_superuser",
+            "date_joined",
+        ]
+
+    def create(self, validated_data):
+        raise NotImplementedError(
+            "Use UserSerializer for update and read. Use SignUpSerializer for user creation."
+        )
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -31,13 +37,19 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "handle",
             "email",
+            "handle",
             "password",
         ]
 
     def create(self, validated_data):
+        # Hashes password before save
         return User.objects.create_user(**validated_data)
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError(
+            "Use SignUpSerializer for user creation. Use UserSerializer for updates."
+        )
 
 
 class LoginSerializer(serializers.Serializer):

@@ -18,7 +18,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
-    friends = models.ManyToManyField("self", symmetrical=False, blank=True)
+    friends = models.ManyToManyField("self", symmetrical=True, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
