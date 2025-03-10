@@ -1,7 +1,9 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from unittest import skip
 from users.api.serializers import UserSerializer, SignUpSerializer, LoginSerializer
+
 
 User = get_user_model()
 
@@ -25,6 +27,7 @@ class BaseUserSerializerTests(TestCase):
         self.friend.save()
         self.user.refresh_from_db()
         self.friend.refresh_from_db()
+
 
 @skip
 class UserSerializerTests(BaseUserSerializerTests):
@@ -185,6 +188,7 @@ class UserSerializerTests(BaseUserSerializerTests):
         with self.assertRaises(NotImplementedError):
             serializer.save()  # This calls create() internally
 
+
 @skip
 class SignUpSerializerTests(BaseUserSerializerTests):
     def setUp(self):
@@ -300,7 +304,6 @@ class SignUpSerializerTests(BaseUserSerializerTests):
             serializer.save()  # This calls update() internally since we provided an instance
 
 
-
 class LoginSerializerTests(BaseUserSerializerTests):
     def setUp(self):
         super().setUp()
@@ -309,3 +312,50 @@ class LoginSerializerTests(BaseUserSerializerTests):
             "email": self.user_data["email"],
             "password": self.user_data["password"],
         }
+
+    def test_valid_login(self):
+        """Test login with valid credentials returns user"""
+        serializer = LoginSerializer(data=self.login_data, context={"request": None})
+        self.assertTrue(serializer.is_valid())
+        self.assertIn("user", serializer.validated_data)
+        self.assertEqual(serializer.validated_data["user"], self.user)
+
+    def test_invalid_password(self):
+        """Test login with invalid password raises AuthenticationFailed"""
+        invalid_data = {"email": self.user_data["email"], "password": "wrongpassword"}
+        serializer = LoginSerializer(data=invalid_data, context={"request": None})
+        with self.assertRaises(AuthenticationFailed) as e:
+            serializer.is_valid()
+            # is this misleading? the error message involves email as well.
+            for term in {"password", "invalid"}:
+                self.assertIn(term, str(e.exception))
+
+    def test_invalid_email(self):
+        """Test login with an invalid email raises AuthenticationFailed"""
+        invalid_data = {"email": "nonexistent@example.com", "password": "somepassword"}
+        serializer = LoginSerializer(data=invalid_data, context={"request": None})
+        with self.assertRaises(AuthenticationFailed) as e:
+            serializer.is_valid()
+            print(e)
+
+    def test_missing_email(self):
+        """Test login with missing email raises ValidationError"""
+        invalid_data = {"password": self.user_data["password"]}
+        serializer = LoginSerializer(data=invalid_data)
+        with self.assertRaises(ValidationError) as e:
+            serializer.is_valid(raise_exception=True)
+            print(e.exception)
+
+    def test_missing_password(self):
+        """Test login with missing password raises ValidationError"""
+        invalid_data = {"email": self.user_data["email"]}
+        serializer = LoginSerializer(data=invalid_data)
+        with self.assertRaises(ValidationError) as e:
+            serializer.is_valid(raise_exception=True)
+            print(e.exception)
+
+    def test_password_not_in_response(self):
+        """Test that password is not included in serialized output"""
+        serializer = LoginSerializer(data=self.login_data, context={"request": None})
+        self.assertTrue(serializer.is_valid())
+        self.assertNotIn("password", serializer.data)
