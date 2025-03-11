@@ -20,6 +20,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api-auth/", include("rest_framework.urls")),
     # since I am doing a react frontend and just an api in the back, then I don't think I am using all auth templates.
     path("thing/", include("users.api.urls")),
 ]
