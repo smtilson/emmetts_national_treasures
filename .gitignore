@@ -200,6 +200,3 @@ dist-ssr
 
 other_repos/*
 backend/staticfiles/
-backend/staticfiles/*
-*/staticfiles/
-staticfiles/

@@ -5,6 +5,12 @@ While visiting my family for Christmas in 2024, I spent an evening at a friends.
 A certain amount of joshing should be enabled, as long as nothing is taken too seriously.
 
 
+## Deployment/Installation
+
+### DRF Browseable API
+
+Remember to run `python manage.py collectstatic` to collect static files before running the server if you want to be able to use the DRF browsable API.
+
 ## References
 The following references were useful:
 
