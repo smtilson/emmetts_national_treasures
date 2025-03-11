@@ -198,4 +198,8 @@ dist-ssr
 *.sln
 *.sw?
 
-other_repos/
+other_repos/*
+backend/staticfiles/
+backend/staticfiles/*
+*/staticfiles/
+staticfiles/

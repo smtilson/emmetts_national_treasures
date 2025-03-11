@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    # "django.contrib.staticfiles", removed since we are using react for the front end
+    "django.contrib.staticfiles",
+    # DO NOT COMMENT OUT THE INSTALLED LINES IF YOU ARENT 100% WHAT THE DO YA DINGUS!
     "django.contrib.sites",
     "rest_framework",  # django rest framework
     "allauth",  # all auth, is this still relevant if I am moving to django rest?
