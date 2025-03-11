@@ -2,16 +2,17 @@ from django.shortcuts import render, reverse
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib import messages
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from treasures.models import Treasure
 from treasures.forms import TreasureCreationForm
-from .serializers import UserSerializer
-from ..models import FriendshipRequest
-from django.contrib.auth import get_user_model
+from .serializers import UserSerializer, SignUpSerializer, LoginSerializer
+from rest_framework.generics import CreateAPIView
+from django.contrib.auth import get_user_model, authenticate
 
 User = get_user_model()
 
@@ -22,112 +23,75 @@ User = get_user_model()
 
 # Create your views here.
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated]  # IsSuperUser
+    queryset = User.objects.all().order_by("date_joined")
     serializer_class = UserSerializer
+    # authentication_classes = [TokenAuthentication, SessionAuthentication]
+    # what goes here for JWT?
+
+    def create(self, request, *args, **kwargs):
+        msg = "You can't create a user via this API endpoint. Use the signup endpoint instead."
+        return HttpResponse(msg, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
-def index(request):
-    user = request.user
-    is_authenticated = user.is_authenticated
-    context = {
-        "path": request.get_full_path(),
-        "user": user,
-        "is_authenticated": is_authenticated,
-    }
-    if not is_authenticated:
-        response = render(request, "users/index.html", context)
-    else:
-        response = HttpResponseRedirect(reverse("user_page"))
-    return response
+class SignupView(CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = SignUpSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        # token, _ = Token.objects.get_or_create(user=user)
+        return user
+        # return token.key
+
+    def create(self, request, *args, **kwargs):
+        """Override create method to include the token in the response."""
+        # JWT tokens not yet implemented
+        return super().create(request, *args, **kwargs)
+        # Create user and get token
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token = self.perform_create(serializer)
+
+        # Get user_data and add token
+        user_data = serializer.data
+        user_data["token"] = token
+        return Response(user_data, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        msg = (
+            "Send a POST request with email, handle (optional), and a "
+            "password. Email will function as the username. An auth token "
+            "will be returned."
+        )
+        return Response({"message": msg})
 
 
-def user_page(request):
-    user = request.user
-    is_authenticated = user.is_authenticated
-    id = getattr(user, "id", "no id found")
-    treasure_form = TreasureCreationForm()
-    context = {
-        "path": request.get_full_path(),
-        "user": user,
-        "is_authenticated": is_authenticated,
-        "friends": [],
-        "id": id,
-        "treasure_form": treasure_form,
-        "treasure_list": list(Treasure.objects.filter(creator=user)),
-    }
-    if not is_authenticated:
-        response = render(request, "users/index.html", context)
-    else:
-        context["friends"] = user.friends.all()
-        response = render(request, "users/user_page.html", context)
-    return response
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = LoginSerializer  # DRF will now auto-generate the form
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get("email")
+            password = serializer.validated_data.get("password")
+            user = authenticate(email=email, password=password)
+            if user:
+                return Response({"token": "tokens not yet implemented"})
+                return Response({"token": user.auth_token.key})
+            return Response(
+                {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        """Allows for API-GUI form."""
+        msg = (
+            "Send a POST request with email and password to login and receive a token."
+        )
+        return Response({"message": msg})
 
 
-def login(request):
-    path = request.get_full_path()
-    html = f'<html lang="en"><body>Login view triggered. The path {path} was requested.</body></html>'
-    return HttpResponse(html)
-
-
-def register(request):
-    path = request.get_full_path()
-    html = f'<html lang="en"><body>Register view triggered. The path {path} was requested.</body></html>'
-    return HttpResponse(html)
-
-
-# I think this will be handled on the front end by an axios patch request
-def set_handle(request):
-    user = request.user
-    if not user.is_authenticated:
-        msg = "You must be logged in to set your name."
-        messages.add_message(request, messages.INFO, msg)
-    elif request.method != "POST":
-        msg = "Invalid request method."
-        messages.add_message(request, messages.INFO, msg)
-    else:
-        user.handle = request.POST["handle"]
-        user.save()
-        msg = f"Handle set to {user.handle}."
-        messages.add_message(request, messages.SUCCESS, msg)
-    response = HttpResponseRedirect(reverse("user_page"))
-    return response
-
-
-def find_user(request):
-    user = request.user
-    search_method = request.POST["search_method"]
-    search_term = request.POST.get(search_method, None)
-    if not search_term:
-        # this error should be better, maybe handled on the front end in terms of the response that is sent back
-        raise ValueError("You must provide a handle or email.")
-    return user.lookup_user(search_term, search_method)
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def add_friend_request(request):
-    # this is rudimentary and should be redone with friend requests or something like that.
-    user = request.user
-    friend, msg, msg_type = find_user(request)
-    if msg_type == messages.SUCCESS:
-        msg_type, msg = FriendshipRequest.create_request(user, friend)
-    messages.add_message(request, msg_type, msg)
-    response = HttpResponseRedirect(reverse("user_page"))
-    return response
-    """ add this stuff later 
-    I believe this is now handled by the decorators above.
-    if request.method != "POST":
-        msg = "Invalid request method."
-        messages.add_message(request, messages.INFO, msg)
-    elif not user.is_authenticated:
-        msg = "You must be logged in to add a friend."
-        messages.add_message(request, messages.INFO, msg)
-    """
-
-
-def add_friend(request):
-    return Response("<div>add_friend view triggered</div>")
-
-
-def add_treasure(request):
-    return Response("<div>add_treasure view triggered</div>")

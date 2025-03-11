@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # DO NOT COMMENT OUT THE INSTALLED LINES IF YOU ARENT 100% WHAT THE DO YA DINGUS!
     "django.contrib.sites",
     "rest_framework",  # django rest framework
     "allauth",  # all auth, is this still relevant if I am moving to django rest?
@@ -81,6 +82,33 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "etgs_nts.urls"
+
+# Django REST Framework settings
+REST_FRAMEWORK = {
+    # Authentication
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # or JWT if you prefer
+    ],
+    # Permissions
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    # Pagination
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
+    # Renderer and parser settings
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ],
+    # Exception handling
+    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
+    # Throttling
+    "DEFAULT_THROTTLE_CLASSES": [],
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "1000/day"},
+}
+
 
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
@@ -148,16 +176,16 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-"""
-Static directories and files removed as the plan is for the frontend to be made with react.
-STATIC_URL = "static/"
+
+# Static directories and files removed as the plan is for the frontend to be made with react.
+STATIC_URL = "/static/"
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-"""
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
