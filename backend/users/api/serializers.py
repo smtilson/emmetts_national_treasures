@@ -1,9 +1,15 @@
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model, authenticate
+from django.conf import settings
+import sys
+
 
 User = get_user_model()
+DEBUG = settings.DEBUG
+TEST = "test" in sys.argv
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,9 +36,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
-        write_only=True, required=True, validators=[validate_password]
+        write_only=True,
+        required=True,
+        validators=[] if DEBUG else [validate_password],
     )
-    handle = serializers.CharField(required=False)
+    handle = serializers.CharField(
+        required=False, validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    email = serializers.EmailField(
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
 
     class Meta:
         model = User

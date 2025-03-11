@@ -189,7 +189,7 @@ class UserSerializerTests(BaseUserSerializerTests):
             serializer.save()  # This calls create() internally
 
 
-@skip
+
 class SignUpSerializerTests(BaseUserSerializerTests):
     def setUp(self):
         super().setUp()
