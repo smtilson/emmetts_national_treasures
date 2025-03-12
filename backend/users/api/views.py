@@ -7,6 +7,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import SessionAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from treasures.models import Treasure
 from treasures.forms import TreasureCreationForm
@@ -41,29 +43,23 @@ class SignupView(CreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        # token, _ = Token.objects.get_or_create(user=user)
         return user
-        # return token.key
 
     def create(self, request, *args, **kwargs):
-        """Override create method to include the token in the response."""
-        # JWT tokens not yet implemented
-        return super().create(request, *args, **kwargs)
-        # Create user and get token
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        user = self.perform_create(serializer)
 
-        token = self.perform_create(serializer)
-
-        # Get user_data and add token
-        user_data = serializer.data
-        user_data["token"] = token
-        return Response(user_data, status=status.HTTP_201_CREATED)
+        refresh = RefreshToken.for_user(user)
+        data = serializer.data
+        data["access"] = str(refresh.access_token)
+        data["refresh"] = str(refresh)
+        return Response(data, status=status.HTTP_201_CREATED)
 
     def get(self, request):
         msg = (
             "Send a POST request with email, handle (optional), and a "
-            "password. Email will function as the username. An auth token "
+            "password. Email will function as the username. Access and refresh tokens "
             "will be returned."
         )
         return Response({"message": msg})
@@ -71,27 +67,16 @@ class SignupView(CreateAPIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
-    serializer_class = LoginSerializer  # DRF will now auto-generate the form
+    serializer_class = LoginSerializer
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data.get("email")
-            password = serializer.validated_data.get("password")
-            user = authenticate(email=email, password=password)
-            if user:
-                return Response({"token": "tokens not yet implemented"})
-                return Response({"token": user.auth_token.key})
-            return Response(
-                {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)
 
     def get(self, request):
-        """Allows for API-GUI form."""
         msg = (
-            "Send a POST request with email and password to login and receive a token."
+            "Send a POST request with email and password. Email will function as the username. "
+            "Access and refresh tokens will be returned."
         )
         return Response({"message": msg})
-
-

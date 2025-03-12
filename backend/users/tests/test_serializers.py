@@ -9,6 +9,7 @@ User = get_user_model()
 
 
 class BaseUserSerializerTests(TestCase):
+
     def setUp(self):
         self.user_data = {
             "email": "test@example.com",
@@ -29,7 +30,6 @@ class BaseUserSerializerTests(TestCase):
         self.friend.refresh_from_db()
 
 
-@skip
 class UserSerializerTests(BaseUserSerializerTests):
     def setUp(self):
         super().setUp()
@@ -189,7 +189,6 @@ class UserSerializerTests(BaseUserSerializerTests):
             serializer.save()  # This calls create() internally
 
 
-
 class SignUpSerializerTests(BaseUserSerializerTests):
     def setUp(self):
         super().setUp()
@@ -317,15 +316,20 @@ class LoginSerializerTests(BaseUserSerializerTests):
         """Test login with valid credentials returns user"""
         serializer = LoginSerializer(data=self.login_data, context={"request": None})
         self.assertTrue(serializer.is_valid())
-        self.assertIn("user", serializer.validated_data)
-        self.assertEqual(serializer.validated_data["user"], self.user)
+        validated_data = serializer.validated_data
+        self.assertIn("id", validated_data)
+        self.assertIn("refresh", validated_data)
+        self.assertIn("access", validated_data)
+        self.assertIn("handle", validated_data)
+        self.assertEqual(validated_data["email"], self.login_data["email"])
 
     def test_invalid_password(self):
         """Test login with invalid password raises AuthenticationFailed"""
         invalid_data = {"email": self.user_data["email"], "password": "wrongpassword"}
         serializer = LoginSerializer(data=invalid_data, context={"request": None})
         with self.assertRaises(AuthenticationFailed) as e:
-            serializer.is_valid()
+            valid = serializer.is_valid()
+            self.assertFalse(valid)
             # is this misleading? the error message involves email as well.
             for term in {"password", "invalid"}:
                 self.assertIn(term, str(e.exception))
@@ -335,8 +339,10 @@ class LoginSerializerTests(BaseUserSerializerTests):
         invalid_data = {"email": "nonexistent@example.com", "password": "somepassword"}
         serializer = LoginSerializer(data=invalid_data, context={"request": None})
         with self.assertRaises(AuthenticationFailed) as e:
-            serializer.is_valid()
-            print(e)
+            valid = serializer.is_valid()
+            self.assertFalse(valid)
+            for term in {"email", "invalid"}:
+                self.assertIn(term, str(e.exception))
 
     def test_missing_email(self):
         """Test login with missing email raises ValidationError"""

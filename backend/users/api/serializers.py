@@ -1,6 +1,7 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.validators import UniqueValidator
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import get_user_model, authenticate
 from django.conf import settings
@@ -65,21 +66,19 @@ class SignUpSerializer(serializers.ModelSerializer):
         )
 
 
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+class LoginSerializer(TokenObtainPairSerializer):
+    username_field = "email"
 
     def validate(self, data):
-        email = data.get("email")
-        password = data.get("password")
-
-        if email and password:
-            user = authenticate(
-                request=self.context.get("request"), email=email, password=password
-            )
-            if not user:
-                raise AuthenticationFailed("Invalid email or password.")
-            data["user"] = user
-        else:
-            raise serializers.ValidationError("Both email and password are required.")
+        token_data = super().validate(data)
+        data = {
+            "id": self.user.id,
+            "email": self.user.email,
+            "handle": getattr(self.user, "handle", ""),
+        }
+        data.update(token_data)
+        # except AuthenticationFailed as e:
+        #   raise serializers.ValidationError(
+        #      {"detail": str(e)}, code=status.HTTP_401_UNAUTHORIZED
+        # )
         return data
