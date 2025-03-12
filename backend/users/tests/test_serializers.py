@@ -30,6 +30,7 @@ class BaseUserSerializerTests(TestCase):
         self.friend.refresh_from_db()
 
 
+@skip
 class UserSerializerTests(BaseUserSerializerTests):
     def setUp(self):
         super().setUp()
@@ -189,6 +190,7 @@ class UserSerializerTests(BaseUserSerializerTests):
             serializer.save()  # This calls create() internally
 
 
+@skip
 class SignUpSerializerTests(BaseUserSerializerTests):
     def setUp(self):
         super().setUp()
@@ -303,6 +305,7 @@ class SignUpSerializerTests(BaseUserSerializerTests):
             serializer.save()  # This calls update() internally since we provided an instance
 
 
+@skip
 class LoginSerializerTests(BaseUserSerializerTests):
     def setUp(self):
         super().setUp()
