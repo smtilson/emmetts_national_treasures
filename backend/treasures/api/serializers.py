@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 
 class TreasureSerializer(serializers.ModelSerializer):
-    creator = serializers.StringRelatedField()
+    
 
     class Meta:
         model = Treasure

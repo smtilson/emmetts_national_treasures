@@ -7,8 +7,7 @@ User = get_user_model()
 
 
 class Treasure(models.Model):
-    id = models.AutoField(primary_key=True)  # this is not necessary
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, blank=False)
     category = models.CharField(max_length=100)  # should this be a choice or a list?
     # lists don't work, so then it would be many to many, and then a separate category model or something.
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -21,6 +20,7 @@ class Treasure(models.Model):
         msg += f" Their reasoning is that {self.description}."
         return msg
 
+    #Why did I add this property?
     @property
     def ignore_fields(self):
         return {"id", "creator", "date_added", "last_modified"}
