@@ -12,13 +12,13 @@ class IsSuperUser(permissions.BasePermission):
         return False
 
 
-class IsOwner(permissions.BasePermission):
+class IsOwnerOrAdmin(permissions.BasePermission):
     """
-    Custom permission to only allow owners to access the view.
+    Custom permission to only allow owners or admins to access the view.
     """
 
     def has_object_permission(self, request, view, obj):
-        if obj.owner == request.user:
+        if getattr(obj, "owner", obj) == request.user or request.user.is_staff:
             return True
         return False
 

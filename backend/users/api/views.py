@@ -6,13 +6,15 @@ from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.authentication import SessionAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from treasures.models import Treasure
 from treasures.forms import TreasureCreationForm
 from .serializers import UserSerializer, SignUpSerializer, LoginSerializer
+from .permissions import IsOwnerOrAdmin, IsFriend
 from rest_framework.generics import CreateAPIView
 from django.contrib.auth import get_user_model, authenticate
 
@@ -28,8 +30,22 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]  # IsSuperUser
     queryset = User.objects.all().order_by("date_joined")
     serializer_class = UserSerializer
-    # authentication_classes = [TokenAuthentication, SessionAuthentication]
-    # what goes here for JWT?
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by("date_joined")
+    serializer_class = UserSerializer
+    
+    def get_permissions(self):
+        """
+        Instantiates and returns the list of permissions that this view requires.
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
+        else:
+            permission_classes = [IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
     def create(self, request, *args, **kwargs):
         msg = "You can't create a user via this API endpoint. Use the signup endpoint instead."
