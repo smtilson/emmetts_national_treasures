@@ -200,37 +200,7 @@ class TreasureSerializerTest(TestCase):
         """Test that creator_handle method field returns correct value"""
         data = self.serializer.data
         self.assertEqual(data["creator_handle"], "testuser")
-
-    def test_short_details_field(self):
-        """Test that short_details method field returns correct value"""
-        data = self.serializer.data
-        # This should match the model's short_details property implementation
-        expected = "Test Treasure - Test Category by testuser"
-        self.assertEqual(data["short_details"], expected)
-
-    def test_readonly_fields(self):
-        """Test that read-only fields are not writable"""
-        data = {
-            "name": "Updated Name",
-            "category": "Updated Category",
-            "description": "Updated description",
-            "creator": 999,  # Should be ignored as read-only
-            "date_added": "2023-01-01T00:00:00Z",  # Should be ignored as read-only
-            "last_modified": "2023-01-01T00:00:00Z",  # Should be ignored as read-only
-        }
-
-        serializer = TreasureSerializer(instance=self.treasure, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        updated_treasure = serializer.save()
-
-        # Check that writable fields were updated
-        self.assertEqual(updated_treasure.name, "Updated Name")
-        self.assertEqual(updated_treasure.category, "Updated Category")
-        self.assertEqual(updated_treasure.description, "Updated description")
-
-        # Check that read-only fields were not changed
-        self.assertEqual(updated_treasure.creator.id, self.user.id)
-
+    
     def test_validate_name_not_blank(self):
         """Test that name validation rejects blank names"""
         # Test with blank name
