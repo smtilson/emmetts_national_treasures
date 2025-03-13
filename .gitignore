@@ -198,3 +198,5 @@ dist-ssr
 *.sw?
 
 other_repos/
+
+backend/staticfiles/
