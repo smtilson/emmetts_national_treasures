@@ -88,7 +88,7 @@ class TreasureModelTest(TestCase):
         expected = "name - category by testuser"
         self.assertEqual(self.treasure.short_details, expected)
 
-    def test_abbrev_property_without_truncation(self):
+    def test_without_truncation(self):
         """Test the abbrev property for short descriptions"""
         sdt = Treasure.objects.create(
             name="Liberty Bell",
@@ -98,9 +98,9 @@ class TreasureModelTest(TestCase):
         )
 
         expected = "Liberty Bell - testuser for It's cracked but still beautiful."
-        self.assertEqual(sdt.abbrev, expected)
+        self.assertEqual(sdt.truncated, expected)
 
-    def test_abbrev_property_with_truncation(self):
+    def test_with_truncation(self):
         """Test the abbrev property truncates long descriptions"""
         long_desc = "This is a very long description that exceeds fifty characters and should be truncated by the abbrev property to ensure readability while still providing context about the treasure that is being described."
         long_desc_treasure = Treasure.objects.create(
@@ -111,7 +111,7 @@ class TreasureModelTest(TestCase):
         )
 
         expected = f"Statue of Liberty - testuser for {long_desc[:50]}..."
-        self.assertEqual(long_desc_treasure.abbrev, expected)
+        self.assertEqual(long_desc_treasure.truncated, expected)
 
     def test_auto_now_fields(self):
         """Test that date_added doesn't change but last_modified does on update"""
@@ -261,7 +261,7 @@ class TreasureModelTest(TestCase):
         expected = "No Category Treasure -  by testuser"
         self.assertEqual(treasure.short_details, expected)
 
-    def test_abbrev_with_exactly_50_char_description(self):
+    def test_with_exactly_50_char_description(self):
         """Test the abbrev property with exactly 50 characters (boundary case)"""
         exactly_50_chars = "This description is exactly fifty characters long."
         self.assertEqual(len(exactly_50_chars), 50)
@@ -275,7 +275,7 @@ class TreasureModelTest(TestCase):
 
         # No ellipsis should be added since it's exactly 50 chars
         expected = f"Boundary Case - testuser for {exactly_50_chars}"
-        self.assertEqual(treasure.abbrev, expected)
+        self.assertEqual(treasure.truncated, expected)
 
     def test_user_with_multiple_treasures(self):
         """Test a user with multiple treasures"""
