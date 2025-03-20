@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # DO NOT COMMENT OUT THE INSTALLED LINES IF YOU ARENT 100% WHAT THE DO YA DINGUS!
     "django.contrib.sites",
+    "debug_toolbar",
     "rest_framework",  # django rest framework
     "rest_framework_simplejwt.token_blacklist",  # refresh tokens will be blacklisted after they expire
     "allauth",  # all auth, is this still relevant if I am moving to django rest?
@@ -76,6 +77,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "allauth.account.middleware.AccountMiddleware",
@@ -83,6 +85,47 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "etgs_nts.urls"
+
+# Logging settings
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": "debug.log",
+        },
+        # "console": {
+        #    "class": "logging.StreamHandler",
+        # },
+    },
+    "loggers": {
+        # "django": {
+        #   "handlers": ["console"],
+        #   "level": "INFO",
+        "django": {
+            "handlers": ["file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "users": {  # your app name
+            "handlers": ["file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "treasures": {  # your app name
+            "handlers": ["file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+        "comments": {  # your app name
+            "handlers": ["file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}
 
 # Django REST Framework settings
 REST_FRAMEWORK = {

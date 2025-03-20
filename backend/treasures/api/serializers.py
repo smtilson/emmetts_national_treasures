@@ -22,15 +22,12 @@ class BaseSerializerMixin:
                 }
             )
 
-    def get_creator_handle(self, obj):
-        return obj.creator.handle
-
 
 class TreasureSerializer(serializers.ModelSerializer, BaseSerializerMixin):
     # I guess these fields are not required so taht I can use the serializer for updating
     creator = serializers.PrimaryKeyRelatedField(required=False, read_only=True)
     # do I want this to be read only? Or maybe there would be a special view that could allow for this?
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, max_length=100)
     category = serializers.CharField(required=False)
     description = serializers.CharField(
         style={"base_template": "textarea.html"}, required=False
@@ -64,6 +61,8 @@ class TreasureSerializer(serializers.ModelSerializer, BaseSerializerMixin):
         return value
 
     def get_creator_handle(self, obj):
+        # user = User.objects.get(pk=obj.creator)
+        # return user.handle
         return obj.creator.handle
 
     def get_short_details(self, obj):

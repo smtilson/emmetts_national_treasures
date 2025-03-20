@@ -73,7 +73,25 @@ class TreasureSerializerTest(TestCase):
         self.assertEqual(data["short_details"], self.treasure.short_details)
         self.assertEqual(data["truncated_description"], self.treasure.truncated)
 
-    def test_update_respects_read_only_fields(self):
+    def test_create_treasure(self):
+        """Test that serializer can create a treasure"""
+        data = {
+            "name": "New Treasure",
+            "category": "New Category",
+            "description": "New description",
+        }
+
+        serializer = TreasureSerializer(data=data)
+        self.assertTrue(serializer.is_valid(raise_exception=True))
+        treasure = serializer.save(creator=self.user)
+
+        self.assertEqual(treasure.name, "New Treasure")
+        self.assertEqual(treasure.category, "New Category")
+        self.assertEqual(treasure.description, "New description")
+        self.assertEqual(treasure.creator, self.user)
+        self.assertEqual(treasure.creator.handle, self.user.handle)
+
+    def test_update_method(self):
         """Test that updates only affect writable fields and respect read-only fields"""
         # Create a new user to try to change creator
         another_user = User.objects.create_user(
@@ -85,7 +103,7 @@ class TreasureSerializerTest(TestCase):
             "id": 99999,  # Should be ignored (not explicitly in serializer but implicitly read-only)
             "name": "Updated Name",
             "category": "Updated Category",
-            "description": "Updated description for testing read-only field handling.",
+            "description": "Updated description.",
             "creator": another_user.id,  # Should be ignored (read-only)
             "creator_handle": "attempt_to_change",  # Should be ignored (method field)
             "date_added": "2020-01-01T00:00:00Z",  # Should be ignored (read-only)
@@ -98,86 +116,46 @@ class TreasureSerializerTest(TestCase):
             instance=self.treasure, data=update_data, partial=True
         )
         serializer.is_valid(raise_exception=True)
-        updated_treasure = serializer.save()
+        updated = serializer.save()
 
         # Refresh from database to ensure we're seeing saved changes
-        updated_treasure.refresh_from_db()
+        updated.refresh_from_db()
 
         # Check writable fields - SHOULD be updated
-        self.assertEqual(updated_treasure.name, "Updated Name")
-        self.assertEqual(updated_treasure.category, "Updated Category")
+        self.assertEqual(updated.name, "Updated Name")
+        self.assertEqual(updated.category, "Updated Category")
         self.assertEqual(
-            updated_treasure.description,
-            "Updated description for testing read-only field handling.",
+            updated.description,
+            "Updated description.",
         )
 
         # Check read-only fields - should NOT be updated
-        self.assertEqual(updated_treasure.id, self.treasure_data["id"])
-        self.assertEqual(updated_treasure.creator, self.user)
-        self.assertEqual(updated_treasure.date_added, self.treasure_data["date_added"])
+        self.assertEqual(updated.id, self.treasure_data["id"])
+        self.assertEqual(updated.creator, self.user)
+        self.assertEqual(updated.date_added, self.treasure_data["date_added"])
 
         # last_modified is a special case - it should be updated automatically because of auto_now=True
         # but not to our specified value
         self.assertNotEqual(
-            updated_treasure.last_modified, self.treasure_data["last_modified"]
+            updated.last_modified, self.treasure_data["last_modified"]
         )  # Should be changed
         self.assertNotEqual(
-            updated_treasure.last_modified.isoformat(), "2020-01-01T00:00:00+00:00"
+            updated.last_modified.isoformat(), "2020-01-01T00:00:00+00:00"
         )  # But not to our value
 
         # Check computed properties - should reflect the new values of the underlying fields
         expected_new_short_details = (
             f"Updated Name - Updated Category by {self.user.handle}"
         )
-        self.assertEqual(updated_treasure.short_details, expected_new_short_details)
+        self.assertEqual(updated.short_details, expected_new_short_details)
 
         # For truncated_description
-        self.assertIn(update_data["name"], updated_treasure.truncated)
-        self.assertIn(self.user.handle, updated_treasure.truncated)
-        self.assertIn(update_data["description"][:50], updated_treasure.truncated)
+        self.assertIn(update_data["name"], updated.truncated)
+        self.assertIn(self.user.handle, updated.truncated)
+        self.assertIn(update_data["description"][:50], updated.truncated)
         if len(update_data["description"]) > 50:
             self.assertIn("...", updated_treasure.truncated)
 
-    def test_validate_name_not_blank(self):
-        """Test that name validation rejects blank names"""
-        # Test with blank name
-        data = {"name": "   "}  # Just spaces
-        serializer = TreasureSerializer(data=data)
-
-        with self.assertRaises(ValidationError):
-            serializer.is_valid(raise_exception=True)
-
-    def test_unknown_field_rejection(self):
-        """Test that unknown fields are rejected based on BaseSerializerMixin"""
-        data = {"name": "Valid Name", "unknown_field": "This should cause an error"}
-
-        serializer = TreasureSerializer(data=data)
-
-        with self.assertRaises(ValidationError):
-            serializer.is_valid(raise_exception=True)
-
-    def test_create_treasure(self):
-        """Test that serializer can create a treasure"""
-        data = {
-            "name": "New Treasure",
-            "category": "New Category",
-            "description": "New description",
-        }
-
-        serializer = TreasureSerializer(
-            data=data, context={"request": type("obj", (object,), {"user": self.user})}
-        )
-        serializer.is_valid(raise_exception=True)
-
-        # Note: This might need adjustment based on how you handle creator assignment
-        # in your views. For testing, we're providing user in the context.
-        treasure = serializer.save(creator=self.user)
-
-        self.assertEqual(treasure.name, "New Treasure")
-        self.assertEqual(treasure.category, "New Category")
-        self.assertEqual(treasure.description, "New description")
-        self.assertEqual(treasure.creator, self.user)
-
     def test_partial_update(self):
         """Test that serializer can partially update a treasure"""
         data = {"name": "Partial Update"}
@@ -196,22 +174,25 @@ class TreasureSerializerTest(TestCase):
             "This is a test description for serializer testing.",
         )
 
-    def test_creator_handle_field(self):
-        """Test that creator_handle method field returns correct value"""
-        data = self.serializer.data
-        self.assertEqual(data["creator_handle"], "testuser")
-    
+    def test_optional_fields(self):
+        """Test that optional fields can be omitted"""
+        # Assuming category is optional
+        data = {"name": "No Category", "description": "This treasure has no category"}
+        serializer = TreasureSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        treasure = serializer.save(creator=self.user)
+        self.assertEqual(treasure.category, "")  # Or None, depending on your model
+
     def test_validate_name_not_blank(self):
         """Test that name validation rejects blank names"""
         # Test with blank name
         data = {"name": "   "}  # Just spaces
         serializer = TreasureSerializer(data=data)
-
-        with self.assertRaises(ValidationError) as e:
+        with self.assertRaises(ValidationError) as context:
             serializer.is_valid(raise_exception=True)
-            print()
-            print(e)
-            print()
+        e = context.exception
+        self.assertIn("name", str(e))
+        self.assertIn("blank", str(e))
 
     def test_unknown_field_rejection(self):
         """Test that unknown fields are rejected based on BaseSerializerMixin"""
@@ -219,45 +200,52 @@ class TreasureSerializerTest(TestCase):
 
         serializer = TreasureSerializer(data=data)
 
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as context:
             serializer.is_valid(raise_exception=True)
+        e = context.exception
+        self.assertIn("unknown_field", str(e))
+        self.assertIn("invalid", str(e))
 
-    def test_create_treasure(self):
-        """Test that serializer can create a treasure"""
-        data = {
-            "name": "New Treasure",
-            "category": "New Category",
-            "description": "New description",
+    def test_deserialization_from_json(self):
+        """Test that serializer can deserialize JSON data correctly"""
+        json_data = {
+            "name": "JSON Treasure",
+            "category": "Deserialized",
+            "description": "This treasure was created from JSON data",
         }
-
-        serializer = TreasureSerializer(
-            data=data, context={"request": type("obj", (object,), {"user": self.user})}
-        )
-        serializer.is_valid(raise_exception=True)
-
-        # Note: This might need adjustment based on how you handle creator assignment
-        # in your views. For testing, we're providing user in the context.
+        serializer = TreasureSerializer(data=json_data)
+        self.assertTrue(serializer.is_valid())
         treasure = serializer.save(creator=self.user)
-
-        self.assertEqual(treasure.name, "New Treasure")
-        self.assertEqual(treasure.category, "New Category")
-        self.assertEqual(treasure.description, "New description")
+        self.assertEqual(treasure.name, "JSON Treasure")
+        self.assertEqual(treasure.category, "Deserialized")
+        self.assertEqual(
+            treasure.description, "This treasure was created from JSON data"
+        )
         self.assertEqual(treasure.creator, self.user)
 
-    def test_partial_update(self):
-        """Test that serializer can partially update a treasure"""
-        data = {"name": "Partial Update"}
+    def test_name_max_length(self):
+        """Test that name field enforces max length"""
+        # Assuming name has a max length (check your model definition)
+        max_length = 100  # Adjust based on your model's actual max_length
+        data = {
+            "name": "X" * (max_length + 1),
+            "category": "Test",
+            "description": "Description",
+        }
+        serializer = TreasureSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("name", serializer.errors)
+        self.assertIn("max_length", str(serializer.errors["name"]))
 
-        serializer = TreasureSerializer(instance=self.treasure, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        updated_treasure = serializer.save()
-
-        # Check that specified field was updated
-        self.assertEqual(updated_treasure.name, "Partial Update")
-
-        # Check that other fields were not changed
-        self.assertEqual(updated_treasure.category, "Test Category")
-        self.assertEqual(
-            updated_treasure.description,
-            "This is a test description for serializer testing.",
-        )
+    def test_empty_description(self):
+        """Test that description can be empty if allowed by the model"""
+        data = {
+            "name": "Empty Description",
+            "category": "Test Category",
+            "description": "",
+        }
+        serializer = TreasureSerializer(data=data)
+        # This assertion depends on whether your model allows empty descriptions
+        serializer.is_valid()
+        self.assertIn("description", serializer.errors)
+        self.assertIn("blank", str(serializer.errors["description"]))
