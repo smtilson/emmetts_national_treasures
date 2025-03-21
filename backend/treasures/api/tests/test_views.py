@@ -77,7 +77,7 @@ class BaseTestCase(APITestCase):
         print(f"\nInitializing test class: {cls.__name__}")
         TestCase.setUpClass()
 
-@skip
+
 class TreasureViewSetUnitTests(BaseTestCase):
     """Unit tests for TreasureViewSet"""
 
@@ -393,7 +393,6 @@ class TreasureViewSetUnitTests(BaseTestCase):
             Treasure.objects.filter(id=treasure.id).exists(),
             "Treasure should not have been deleted by unauthenticated user",
         )
-
 
 
 class TreasureViewSetIntegrationTests(BaseTestCase):

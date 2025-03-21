@@ -1,7 +1,9 @@
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
-import Food from "./components/Food.jsx";
 import ListGroup from "./components/ListGroup.jsx";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import theme from "./theme.js";
 
 function App() {
   let items = [
@@ -17,7 +19,8 @@ function App() {
     console.log("Index: " + index);
   };
   return (
-    <>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
       <Header />
       <ListGroup
         items={["spaghetti", "randome"]}
@@ -30,7 +33,7 @@ function App() {
         onSelectItem={handleSelectItem}
       />
       <Footer />
-    </>
+    </ThemeProvider>
   );
 }
 
