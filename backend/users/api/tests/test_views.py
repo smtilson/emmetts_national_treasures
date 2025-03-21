@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 import json
 from unittest import skip
@@ -11,7 +11,7 @@ from unittest import skip
 User = get_user_model()
 
 
-class UserViewSetTest(TestCase):
+class BaseTestCase(APITestCase):
     def setUp(self):
         self.client = APIClient()
 
@@ -52,6 +52,14 @@ class UserViewSetTest(TestCase):
     def authenticate(self, user):
         token = self.get_tokens_for_user(user)["access"]
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+    @classmethod
+    def setUpClass(cls):
+        print(f"\nInitializing test class: {cls.__name__}")
+        TestCase.setUpClass()
+
+
+class UserViewSetTest(BaseTestCase):
 
     def test_unauthenticated_access_denied(self):
         """Test that unauthenticated users cannot access user endpoints"""

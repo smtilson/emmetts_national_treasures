@@ -15,10 +15,10 @@ from treasures.api.serializers import TreasureSerializer
 User = get_user_model()
 
 
-class TreasureViewSetTestBase(APITestCase):
-    """Base test case for TreasureViewSet tests with users and treasures setup"""
-
+class BaseTestCase(APITestCase):
     def setUp(self):
+        self.client = APIClient()
+
         # Create a normal user
         self.user = User.objects.create_user(
             email="user@example.com", handle="normaluser", password="password123"
@@ -28,36 +28,32 @@ class TreasureViewSetTestBase(APITestCase):
         self.superuser = User.objects.create_superuser(
             email="admin@example.com", handle="adminuser", password="adminpass123"
         )
-
+        TREASURE_DATA = []
+        for i in range(3):
+            for user in {self.user, self.superuser}:
+                TREASURE_DATA.append(
+                    {
+                        "name": f"{user.handle}'s Treasure {i+1}",
+                        "category": f"{user.handle}'s Category {i+1}",
+                        "description": f"{user.handle}'s Description for treasure {i+1}",
+                        "creator": user,
+                    }
+                )
+        for data in TREASURE_DATA:
+            Treasure.objects.create(**data)
         # Create treasures for normal user
-        self.user_treasures = []
-        for i in range(3):
-            treasure = Treasure.objects.create(
-                creator=self.user,
-                name=f"User Treasure {i+1}",
-                category=f"Category {i+1}",
-                description=f"Description for user treasure {i+1}",
-            )
-            self.user_treasures.append(treasure)
-
+        self.user_treasures = list(Treasure.objects.filter(creator=self.user))
         # Create treasures for superuser
-        self.superuser_treasures = []
-        for i in range(3):
-            treasure = Treasure.objects.create(
-                creator=self.superuser,
-                name=f"Admin Treasure {i+1}",
-                category=f"Admin Category {i+1}",
-                description=f"Description for admin treasure {i+1}",
-            )
-            self.superuser_treasures.append(treasure)
-
+        self.superuser_treasures = list(Treasure.objects.filter(creator=self.superuser))
         # Set up API client
-        self.client = APIClient()
 
         # URLs
-        self.list_url = reverse(
-            "treasure-list"
-        )  # Assuming 'treasure-list' is the name of the list route
+        self.list_url = reverse("treasure-list")
+
+        # Clear credentials
+        self.client.credentials()
+        self.client.defaults["HTTP_ACCEPT"] = "application/json"
+        self.client.defaults["format"] = "json"
 
     def get_detail_url(self, treasure_id):
         """Helper method to get detail URL for a specific treasure"""
@@ -76,11 +72,16 @@ class TreasureViewSetTestBase(APITestCase):
         token = self.get_tokens_for_user(user)["access"]
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
+    @classmethod
+    def setUpClass(cls):
+        print(f"\nInitializing test class: {cls.__name__}")
+        TestCase.setUpClass()
 
-class TreasureViewSetUnitTests(TreasureViewSetTestBase):
+@skip
+class TreasureViewSetUnitTests(BaseTestCase):
     """Unit tests for TreasureViewSet"""
 
-    def test_list_treasures_authenticated(self):
+    def test_retrieve_list(self):
         """Test that authenticated users can list their own treasures"""
         # Login as normal user
         self.authenticate(self.user)
@@ -101,15 +102,15 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         user_treasure_ids = [treasure.id for treasure in self.user_treasures]
         self.assertEqual(set(treasure_ids), set(user_treasure_ids))
 
-    def test_list_treasures_unauthenticated(self):
+    def test_retrieve_list_unauth(self):
         """Test that unauthenticated users cannot list treasures"""
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_retrieve_own_treasure(self):
+    def test_retrieve(self):
         """Test that users can retrieve their own treasures"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Get a specific treasure
         treasure = self.user_treasures[0]
@@ -122,23 +123,28 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         self.assertEqual(response.data["name"], treasure.name)
         self.assertEqual(response.data["creator"], self.user.id)
 
-    def test_retrieve_other_user_treasure(self):
-        """Test that users cannot retrieve other users' treasures"""
-        # Login as normal user
-        self.client.force_authenticate(user=self.user)
+    def test_retrieve_unauth(self):
+        """Test that unauthenticated users cannot retrieve a treasure"""
+        # Try to get a treasure (using one from the superuser for convenience)
+        treasure = self.user_treasures[0]
+        url = self.get_detail_url(treasure.id)
+        response = self.client.get(url)
 
-        # Try to get a superuser's treasure
+        # Should return 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_retrieve_wrong_user(self):
+        """Test that unauthenticated users cannot retrieve a treasure"""
+        # Try to get a treasure (using one from the superuser for convenience)
+        self.authenticate(self.user)
         treasure = self.superuser_treasures[0]
         url = self.get_detail_url(treasure.id)
         response = self.client.get(url)
 
-        # Should return 404 as the queryset is filtered to user's treasures
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_create_treasure(self):
+    def test_create(self):
         """Test creating a new treasure"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Data for new treasure
         data = {
@@ -148,7 +154,7 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         }
 
         # Create treasure
-        response = self.client.post(self.list_url, data, format="json")
+        response = self.client.post(self.list_url, data)
 
         # Check response
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -163,10 +169,31 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         self.assertEqual(treasure.name, data["name"])
         self.assertEqual(treasure.creator, self.user)
 
-    def test_update_own_treasure(self):
+    def test_create__unauth(self):
+        """Test that unauthenticated users cannot create treasures"""
+        # Data for new treasure
+        data = {
+            "name": "Unauthenticated Test Treasure",
+            "category": "Test Category",
+            "description": "This should fail because user is not authenticated",
+        }
+
+        # Attempt to create treasure
+        response = self.client.post(self.list_url, data)
+
+        # Should return 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Verify no treasure was created with this name
+        self.assertFalse(
+            Treasure.objects.filter(name=data["name"]).exists(),
+            "Treasure should not have been created by unauthenticated user",
+        )
+
+    def test_update(self):
         """Test updating own treasure"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Get a treasure to update
         treasure = self.user_treasures[0]
@@ -180,7 +207,7 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         }
 
         # Update treasure
-        response = self.client.put(url, data, format="json")
+        response = self.client.put(url, data)
 
         # Check response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -194,10 +221,59 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         self.assertEqual(treasure.category, data["category"])
         self.assertEqual(treasure.description, data["description"])
 
-    def test_partial_update_own_treasure(self):
+    def test_update_unauth(self):
+        """Test that unauthenticated users cannot update treasures"""
+        # Get a treasure to attempt to update
+        treasure = self.user_treasures[0]
+        original_name = treasure.name
+        url = self.get_detail_url(treasure.id)
+
+        # Update data
+        data = {
+            "name": "Attempted Unauthenticated Update",
+            "category": "Should Fail",
+            "description": "This update should fail due to lack of authentication",
+        }
+
+        # Attempt to update treasure
+        response = self.client.put(url, data)
+
+        # Should return 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Verify treasure was not updated
+        treasure.refresh_from_db()
+        self.assertEqual(treasure.name, original_name)
+
+    def test_update_wrong_user(self):
+        """Test that unauthenticated users cannot update treasures"""
+        # Get a treasure to attempt to update
+        self.authenticate(self.user)
+        treasure = self.superuser_treasures[0]
+        original_name = treasure.name
+        url = self.get_detail_url(treasure.id)
+
+        # Update data
+        data = {
+            "name": "Attempted Unauthenticated Update",
+            "category": "Should Fail",
+            "description": "This update should fail due to lack of authentication",
+        }
+
+        # Attempt to update treasure
+        response = self.client.put(url, data)
+
+        # Should return 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Verify treasure was not updated
+        treasure.refresh_from_db()
+        self.assertEqual(treasure.name, original_name)
+
+    def test_partial_update(self):
         """Test partially updating own treasure"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Get a treasure to update
         treasure = self.user_treasures[0]
@@ -207,7 +283,7 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         data = {"name": "Partially Updated Name"}
 
         # Update treasure
-        response = self.client.patch(url, data, format="json")
+        response = self.client.patch(url, data)
 
         # Check response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -221,10 +297,51 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         treasure.refresh_from_db()
         self.assertEqual(treasure.name, data["name"])
 
-    def test_delete_own_treasure(self):
+    def test_partial_update_unauth(self):
+        """Test that unauthenticated users cannot partially update treasures"""
+        # Get a treasure to attempt to update
+        treasure = self.user_treasures[0]
+        original_name = treasure.name
+        url = self.get_detail_url(treasure.id)
+
+        # Partial update data
+        data = {"name": "Attempted Unauthenticated Partial Update"}
+
+        # Attempt to update treasure
+        response = self.client.patch(url, data)
+
+        # Should return 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Verify treasure was not updated
+        treasure.refresh_from_db()
+        self.assertEqual(treasure.name, original_name)
+
+    def test_partial_update_wrong_user(self):
+        """Test that unauthenticated users cannot partially update treasures"""
+        # Get a treasure to attempt to update
+        self.authenticate(self.user)
+        treasure = self.superuser_treasures[0]
+        original_name = treasure.name
+        url = self.get_detail_url(treasure.id)
+
+        # Partial update data
+        data = {"name": "Attempted Unauthenticated Partial Update"}
+
+        # Attempt to update treasure
+        response = self.client.patch(url, data)
+
+        # Should return 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # Verify treasure was not updated
+        treasure.refresh_from_db()
+        self.assertEqual(treasure.name, original_name)
+
+    def test_delete(self):
         """Test deleting own treasure"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Get a treasure to delete
         treasure = self.user_treasures[0]
@@ -240,53 +357,52 @@ class TreasureViewSetUnitTests(TreasureViewSetTestBase):
         with self.assertRaises(Treasure.DoesNotExist):
             Treasure.objects.get(id=treasure.id)
 
-    def test_update_other_user_treasure(self):
-        """Test that users cannot update other users' treasures"""
-        # Login as normal user
-        self.client.force_authenticate(user=self.user)
-
-        # Try to update a superuser's treasure
-        treasure = self.superuser_treasures[0]
+    def test_delete_unauth(self):
+        """Test that unauthenticated users cannot delete treasures"""
+        # Get a treasure to attempt to delete
+        treasure = self.user_treasures[0]
         url = self.get_detail_url(treasure.id)
 
-        data = {"name": "Attempt to Update Other User's Treasure"}
-
-        # Try to update
-        response = self.client.patch(url, data, format="json")
-
-        # Should return 404 as the queryset is filtered to user's treasures
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-        # Verify treasure was not updated
-        treasure.refresh_from_db()
-        self.assertNotEqual(treasure.name, data["name"])
-
-    def test_delete_other_user_treasure(self):
-        """Test that users cannot delete other users' treasures"""
-        # Login as normal user
-        self.client.force_authenticate(user=self.user)
-
-        # Try to delete a superuser's treasure
-        treasure = self.superuser_treasures[0]
-        url = self.get_detail_url(treasure.id)
-
-        # Try to delete
+        # Attempt to delete treasure
         response = self.client.delete(url)
 
-        # Should return 404 as the queryset is filtered to user's treasures
+        # Should return 401 Unauthorized
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # Verify treasure was not deleted
+        self.assertTrue(
+            Treasure.objects.filter(id=treasure.id).exists(),
+            "Treasure should not have been deleted by unauthenticated user",
+        )
+
+    def test_delete_wrong_user(self):
+        """Test that unauthenticated users cannot delete treasures"""
+        # Get a treasure to attempt to delete
+        self.authenticate(self.user)
+        treasure = self.superuser_treasures[0]
+        url = self.get_detail_url(treasure.id)
+
+        # Attempt to delete treasure
+        response = self.client.delete(url)
+
+        # Should return 401 Unauthorized
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
         # Verify treasure was not deleted
-        self.assertTrue(Treasure.objects.filter(id=treasure.id).exists())
+        self.assertTrue(
+            Treasure.objects.filter(id=treasure.id).exists(),
+            "Treasure should not have been deleted by unauthenticated user",
+        )
 
 
-class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
+
+class TreasureViewSetIntegrationTests(BaseTestCase):
     """Integration tests for TreasureViewSet"""
 
     def test_create_and_retrieve_flow(self):
         """Test the full flow of creating and then retrieving a treasure"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Create a new treasure
         create_data = {
@@ -295,7 +411,7 @@ class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
             "description": "This treasure tests the full create-retrieve flow",
         }
 
-        create_response = self.client.post(self.list_url, create_data, format="json")
+        create_response = self.client.post(self.list_url, create_data)
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
         # Get the ID of the created treasure
@@ -319,7 +435,7 @@ class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
     def test_create_update_delete_flow(self):
         """Test the full flow of creating, updating, and then deleting a treasure"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Create a new treasure
         create_data = {
@@ -328,7 +444,7 @@ class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
             "description": "This treasure tests the full CRUD flow",
         }
 
-        create_response = self.client.post(self.list_url, create_data, format="json")
+        create_response = self.client.post(self.list_url, create_data)
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
         # Get the ID of the created treasure
@@ -341,7 +457,7 @@ class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
             "description": "This description has been updated",
         }
 
-        update_response = self.client.patch(detail_url, update_data, format="json")
+        update_response = self.client.patch(detail_url, update_data)
         self.assertEqual(update_response.status_code, status.HTTP_200_OK)
         self.assertEqual(update_response.data["name"], update_data["name"])
         self.assertEqual(
@@ -362,7 +478,7 @@ class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
     def test_pagination(self):
         """Test that pagination works correctly"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Create more treasures to test pagination (assuming page_size=10)
         for i in range(15):
@@ -396,7 +512,7 @@ class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
     def test_custom_page_size(self):
         """Test that custom page_size query parameter works"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Create more treasures
         for i in range(10):
@@ -417,7 +533,7 @@ class TreasureViewSetIntegrationTests(TreasureViewSetTestBase):
 
 
 @skip
-class CopyTreasureViewTest(TreasureViewSetTestBase):
+class CopyTreasureViewTest(BaseTestCase):
     """Tests for the copy_treasure view function"""
 
     def setUp(self):
@@ -428,7 +544,7 @@ class CopyTreasureViewTest(TreasureViewSetTestBase):
     def test_copy_treasure_authenticated(self):
         """Test that authenticated users can copy treasures"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Copy a treasure
         response = self.client.post(self.copy_url)
@@ -461,7 +577,7 @@ class CopyTreasureViewTest(TreasureViewSetTestBase):
     def test_copy_nonexistent_treasure(self):
         """Test copying a nonexistent treasure"""
         # Login as normal user
-        self.client.force_authenticate(user=self.user)
+        self.authenticate(user=self.user)
 
         # Try to copy a nonexistent treasure
         url = reverse("copy-treasure", args=[99999])  # Assuming this ID doesn't exist

@@ -17,6 +17,9 @@ class Treasure(models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ["creator", "id"]
+
     def __str__(self):
         msg = f"{self.creator.handle} feels that {self.name} is a National Treasure."
         msg += f" Their reasoning is that {self.description}."
