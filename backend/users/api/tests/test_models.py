@@ -7,7 +7,6 @@ from unittest import skip
 User = get_user_model()
 
 
-@skip
 class UserModelTests(TestCase):
     def setUp(self):
         self.user_data = {
@@ -41,6 +40,8 @@ class UserModelTests(TestCase):
         self.assertTrue(new_user.is_active)
         self.assertFalse(new_user.is_staff)
         self.assertTrue(new_user.check_password("newpassword123"))
+        self.assertEqual(new_user.friends.count(), 0)
+        self.assertEqual(new_user.treasure_set.all().count(), 0)
 
         # Verify it was actually saved to the database
         self.assertIsNotNone(new_user.pk)
