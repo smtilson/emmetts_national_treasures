@@ -4,20 +4,21 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
+
 # Create your models here.
 
 from .managers import CustomUserManager
 
 
-class CustomUser(AbstractBaseUser, PermissionsMixin):
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
-    handle = models.CharField(_("handle"), max_length=30, unique=True, blank=True)
+    handle = models.CharField(
+        _("handle"), max_length=30, unique=True, blank=True, null=True
+    )
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(_("date joined"), default=timezone.now)
-    is_active = models.BooleanField(_("active"), default=True)
-    is_staff = models.BooleanField(_("staff"), default=False)
-    friends = models.ManyToManyField("self", symmetrical=False, blank=True)
-
-    objects = CustomUserManager()
+    friends = models.ManyToManyField("self", symmetrical=True, blank=True)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -25,7 +26,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.handle
+        if self.handle:
+            return self.handle
+        return self.email.split("@")[0]
 
     def add_friend(self, friend):
         self.friends.add(friend)
@@ -34,29 +37,27 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         friend.save()
 
     @classmethod
-    def dummy_user(cls) -> "CustomUser":
+    def dummy_user(cls):
         count = cls.dummy_count()
         email = f"dummy{count}@example.com"
         handle = f"dummy_{count}"
-        user = CustomUser.objects.create_user(
-            email=email, password="password", handle=handle
-        )
+        user = User.objects.create_user(email=email, password="password", handle=handle)
         return user
 
     @classmethod
     def dummy_count(cls) -> int:
-        return CustomUser.objects.filter(handle__startswith="dummy").count()
+        return User.objects.filter(handle__startswith="dummy").count()
 
     def lookup_user(self, search_term, search_method):
         if search_term == "dummy test":
-            friend = CustomUser.dummy_user()
+            friend = User.dummy_user()
             msg = f"{friend.handle} created."
             msg_type = messages.SUCCESS
         else:
             search_data = {search_method: search_term}
             try:
-                friend = CustomUser.objects.get(**search_data)
-            except CustomUser.DoesNotExist:
+                friend = User.objects.get(**search_data)
+            except User.DoesNotExist:
                 friend = None
                 msg = "User not found, please provide a valid handle or email."
                 msg_type = messages.ERROR
@@ -69,10 +70,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 class FriendshipRequest(models.Model):
     sender = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="sent_requests"
+        User, on_delete=models.CASCADE, related_name="sent_requests"
     )
     receiver = models.ForeignKey(
-        CustomUser, on_delete=models.CASCADE, related_name="received_requests"
+        User, on_delete=models.CASCADE, related_name="received_requests"
     )
     date_sent = models.DateTimeField(auto_now_add=True)
     date_responded = models.DateTimeField(null=True, blank=True)
