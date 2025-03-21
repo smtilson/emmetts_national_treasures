@@ -1,7 +1,10 @@
 from django.db import models
-from users.models import CustomUser
+from django.contrib.auth import get_user_model
 from treasures.models import Treasure
+
 # Create your models here.
+
+User = get_user_model()
 
 
 def unknown_author():
@@ -13,8 +16,12 @@ class Comment(models.Model):
     id = models.AutoField(primary_key=True)
     content = models.TextField()
     treasure = models.ForeignKey("treasures.Treasure", on_delete=models.CASCADE)
-    author = models.ForeignKey(CustomUser, on_delete=models.SET(unknown_author))
+    author = models.ForeignKey(User, on_delete=models.SET(unknown_author))
     date_added = models.DateTimeField(auto_now_add=True)
+    # no replies yet.
+    # reply_to = models.ForeignKey(
+    #    "self", on_delete=models.SET_NULL, null=True, default=None
+    # )
 
     def __str__(self):
         return f"{self.author.handle} said: {self.content}"
