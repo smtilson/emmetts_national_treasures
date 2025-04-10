@@ -67,6 +67,7 @@ class SignupView(CreateAPIView):
         user = self.perform_create(serializer)
 
         refresh = RefreshToken.for_user(user)
+        refresh['handle'] = user.handle
         data = serializer.data
         data["access"] = str(refresh.access_token)
         data["refresh"] = str(refresh)

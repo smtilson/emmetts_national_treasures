@@ -15,6 +15,7 @@ So what is necessary:
 ## Planning/To-Do's
 
 - Translation? Django has a tool for this, and so does react, I guess I would need to do both.
+- Need to add tests that the tokens are working correctly.
 
 ## Branches
 

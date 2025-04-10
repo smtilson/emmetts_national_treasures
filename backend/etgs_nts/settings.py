@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # DO NOT COMMENT OUT THE INSTALLED LINES IF YOU ARENT 100% WHAT THE DO YA DINGUS!
     "django.contrib.sites",
     "debug_toolbar",
+    "corsheaders",
     "rest_framework",  # django rest framework
     "rest_framework_simplejwt.token_blacklist",  # refresh tokens will be blacklisted after they expire
     "allauth",  # all auth, is this still relevant if I am moving to django rest?
@@ -75,6 +76,7 @@ LOGOUT_REDIRECT_URL = "/"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
@@ -82,6 +84,27 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "allauth.account.middleware.AccountMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+# CORS settings
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 ROOT_URLCONF = "etgs_nts.urls"
@@ -96,14 +119,15 @@ LOGGING = {
             "class": "logging.FileHandler",
             "filename": "debug.log",
         },
-        # "console": {
-        #    "class": "logging.StreamHandler",
-        # },
+        "console": {
+            "class": "logging.StreamHandler",
+        },
     },
     "loggers": {
-        # "django": {
-        #   "handlers": ["console"],
-        #   "level": "INFO",
+        "django": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
         "django": {
             "handlers": ["file"],
             "level": "DEBUG",
@@ -179,7 +203,7 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(minutes=5),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
-    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": ".serializers.MyTokenObtainPairSerializer",
     "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
     "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",

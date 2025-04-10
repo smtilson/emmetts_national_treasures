@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Always apply dark mode styles to the body */
+body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.children-p-4 {
+  @apply p-4;
+}
+
+.children-m-4 {
+  @apply m-4;
+}

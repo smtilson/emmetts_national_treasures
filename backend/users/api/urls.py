@@ -6,8 +6,8 @@ router = DefaultRouter()
 router.register(r"users", UserViewSet)
 
 urlpatterns = [
-    path("", include(router.urls)),
-    path("signup/", SignupView.as_view(), name="signup"),
-    path("login/", LoginView.as_view(), name="login"),
+    path("api/", include(router.urls)),
+    path("api/signup/", SignupView.as_view(), name="signup"),
+    path("api/login/", LoginView.as_view(), name="login"),
     # or is it better to pass the form data in the url?
 ]

@@ -373,6 +373,8 @@ class LoginViewTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Verify tokens are present
+        # I should also add a test that when you log in again, you get the same tokens?
+        # maybe just for the refresh token.
         self.assertIn("access", response.data)
         self.assertIn("refresh", response.data)
 

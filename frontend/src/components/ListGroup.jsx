@@ -1,5 +1,7 @@
-import { MouseEvent, useState } from "react";
-
+// MouseEvent from react was imported but not used.
+import { useState } from "react";
+import PropTypes from 'prop-types';
+import MyListItem from "./ListItem.jsx";
 function ListGroup({ items, heading, onSelectItem }) {
   //let items = props.items;
   //let heading = props.heading;
@@ -16,25 +18,29 @@ function ListGroup({ items, heading, onSelectItem }) {
   };
   return (
     <>
-      <h1>{heading}</h1>
-      {items.length === 0 && <p>No items to display</p>}
-      <ul className="list-group">
+    <div className="mb-6">
+      <h1 className="text-2xl font-bold mb-4 text-white">{heading}</h1>
+      {items.length === 0 && <p className="text-gray-400">No items to display</p>}
+      <ul>
         {items.map((item, index) => (
-          <li
+          <MyListItem
             key={item}
-            className={
-              selectedIndex === index
-                ? "list-group-item active"
-                : "list-group-item"
-            }
-            onClick={(e) => handleClick(e, item, index)}
-          >
-            {item}
-          </li>
+            text={item}
+            isSelected={selectedIndex === index}
+            onItemClick={(e) => handleClick(e, item, index)}
+          />
+          //</MyListItem>
         ))}
       </ul>
+      </div>
     </>
   );
 }
+
+ListGroup.propTypes = {
+  items: PropTypes.array.isRequired,
+  heading: PropTypes.string.isRequired,
+  onSelectItem: PropTypes.func.isRequired,
+};
 
 export default ListGroup;
