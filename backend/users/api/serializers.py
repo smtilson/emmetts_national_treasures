@@ -36,13 +36,17 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     password = serializers.CharField(
         write_only=True,
         required=True,
         validators=[] if DEBUG else [validate_password],
     )
+    confirm_password = serializers.CharField(write_only=True, required=True)
     handle = serializers.CharField(
-        required=False, validators=[UniqueValidator(queryset=User.objects.all())]
+        required=False,
+        allow_blank=True,
+        validators=[UniqueValidator(queryset=User.objects.all())],
     )
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())]
@@ -51,19 +55,30 @@ class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            "id",
             "email",
             "handle",
             "password",
+            "confirm_password",
         ]
 
     def create(self, validated_data):
         # Hashes password before save
+        # del validated_data["confirm_password"]
+        validated_data.pop("confirm_password")
         return User.objects.create_user(**validated_data)
 
     def update(self, instance, validated_data):
         raise NotImplementedError(
             "Use SignUpSerializer for user creation. Use UserSerializer for updates."
         )
+
+    def validate(self, data):
+        if data["password"] != data["confirm_password"]:
+            raise serializers.ValidationError(
+                {"password": "Password fields do not match."}
+            )
+        return data
 
 
 class LoginSerializer(TokenObtainPairSerializer):

@@ -30,6 +30,8 @@ class BaseUserSerializerTests(TestCase):
         self.friend.refresh_from_db()
 
 
+#modify tests to check for id returned upon signup.
+#add check that the password matches confirm password
 @skip
 class UserSerializerTests(BaseUserSerializerTests):
     def setUp(self):

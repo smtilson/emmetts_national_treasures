@@ -121,32 +121,29 @@ LOGGING = {
         },
         "console": {
             "class": "logging.StreamHandler",
+            "level": "INFO",
         },
     },
     "loggers": {
         "django": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-        },
-        "django": {
-            "handlers": ["file"],
+            "handlers": ["console", "file"],
             "level": "DEBUG",
             "propagate": True,
         },
-        "users": {  # your app name
+        "users": {  # app name
             "handlers": ["file"],
             "level": "DEBUG",
-            "propagate": True,
+            "propagate": False,
         },
-        "treasures": {  # your app name
+        "treasures": {  # app name
             "handlers": ["file"],
-            "level": "DEBUG",
-            "propagate": True,
+            "level": "INFO",
+            "propagate": False,
         },
-        "comments": {  # your app name
+        "comments": {  # app name
             "handlers": ["file"],
             "level": "DEBUG",
-            "propagate": True,
+            "propagate": False,
         },
     },
 }

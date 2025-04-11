@@ -5,16 +5,25 @@ import LoginForm from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { GlobalProvider} from "./contexts/baseContext";
+import { useGlobalContext } from "./contexts/baseContext";
 
-function App() {
+function UnAuthForms() {
   return (
-    <GlobalProvider>
-      <Header />
+    <>
       <SignUp />
       <LoginForm />
+    </>
+  );
+}
+
+function App() {
+  const { user, isAuthenticated } = useGlobalContext();
+  return (
+    <>
+      <Header /> {!isAuthenticated && <UnAuthForms />}
+      <h2>Auth status: {isAuthenticated.toString()}</h2>
       <Footer />
-    </GlobalProvider>
+    </>
   );
 }
 

@@ -179,6 +179,7 @@ class UserViewSetTest(BaseTestCase):
 
 
 class SignupViewTests(TestCase):
+    # modify tests to check for ID
     def setUp(self):
         self.client = APIClient()
         self.signup_url = reverse("signup")  # Make sure this matches your URL name
