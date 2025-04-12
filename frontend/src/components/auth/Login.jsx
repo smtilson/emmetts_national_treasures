@@ -30,6 +30,9 @@ const LoginForm = () => {
       localStorage.setItem("accessToken", response.data.access);
       localStorage.setItem("refreshToken", response.data.refresh);
       const userId = response.data.id;
+      console.log("user logged in with id ", userId);
+      console.log("access token ", response.data.access);
+
       const userResponse = await axios.get(backendURL + "api/users/" + userId, {
         headers: {
           Authorization: "Bearer " + response.data.access,

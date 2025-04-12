@@ -6,6 +6,7 @@ import SignUp from "./components/auth/SignUp.jsx";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useGlobalContext } from "./contexts/baseContext";
+import Profile from "./components/profile/Profile.jsx";
 
 function UnAuthForms() {
   return (
@@ -21,7 +22,8 @@ function App() {
   return (
     <>
       <Header /> {!isAuthenticated && <UnAuthForms />}
-      <h2>Auth status: {isAuthenticated.toString()}</h2>
+      {isAuthenticated && <Profile/>}
+
       <Footer />
     </>
   );
