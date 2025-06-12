@@ -46,11 +46,9 @@ class SignUpSerializer(serializers.ModelSerializer):
     handle = serializers.CharField(
         required=False,
         allow_blank=True,
-        validators=[UniqueValidator(queryset=User.objects.all())],
     )
-    email = serializers.EmailField(
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
+    # Remove the UniqueValidator and handle it manually
+    email = serializers.EmailField()
 
     class Meta:
         model = User
@@ -61,6 +59,29 @@ class SignUpSerializer(serializers.ModelSerializer):
             "password",
             "confirm_password",
         ]
+
+    def validate_email(self, value):
+        """
+        Check that the email is unique with a custom error message.
+        """
+        if User.objects.filter(email=value).exists():
+            # Print for debugging
+            print(f"Email validation error: {value} already exists")
+            # Raise with a custom message
+            raise serializers.ValidationError(
+                "This email address is already registered. Please use a different email or try logging in."
+            )
+        return value
+
+    def validate_handle(self, value):
+        "Check that non-empty handle is unique."
+        already_exists = User.objects.filter(handle=value).exists()
+        if value and already_exists:
+            # Raise with a custom message
+            raise serializers.ValidationError(
+                "This handle is already in use. Please choose a different one."
+            )
+        return value
 
     def create(self, validated_data):
         # Hashes password before save

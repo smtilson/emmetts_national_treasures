@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useGlobalContext } from "../../contexts/baseContext";
 //import {useNavigate} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -103,4 +104,21 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+const Login = () => {
+  return (
+    <div>
+      <LoginForm />
+      <div className="mt-4 text-center">
+        <p>Don't have an account?</p>
+        <Link
+          to="/signup"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          Sign up here!
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

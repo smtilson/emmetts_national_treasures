@@ -40,10 +40,10 @@ const SignUpForm = () => {
   const { backendURL, setUser, setIsAuthenticated } = useGlobalContext();
   //const navigate = useNavigate();
 
-  const validatePasswords = () => {
+  /*const validatePasswords = () => {
     setPasswordMatch(password === confirmPassword);
     return password === confirmPassword;
-  };
+  };*/
 
   const styles = "border-3 border-light-gray-200 m-4 rounded";
   const mod = "signup-";
@@ -80,6 +80,7 @@ const SignUpForm = () => {
         confirm_password: confirmPassword,
         handle: handle,
       });
+      
       // storing tokens in local storage
       localStorage.setItem("accessToken", response.data.access);
       localStorage.setItem("refreshToken", response.data.refresh);
@@ -93,28 +94,43 @@ const SignUpForm = () => {
       console.log("User response: ", userResponse.data);
       setUser(userResponse.data);
       setIsAuthenticated(true);
+      
     } catch (error) {
       // Handle error (e.g., show error message)
       console.error("Sign up failed:", error);
       setIsAuthenticated(false);
       setUser(null);
+      
+      // Enhanced error logging
+      console.log("Error details:", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+      });
+      
       if (error.response) {
-        console.log(error.response.data);
-        if (error.response.data.password) {
-          setError(error.response.data.password[0]);
-        } else if (error.response.data.email) {
-          setError(error.response.data.email[0]);
-        } else if (error.response.data.handle) {
-          setError(error.response.data.handle[0]);
+        console.log("Full error response:", error.response);
+        
+        // Check for errors in the errors field first
+        if (error.response.data.errors) {
+          if (error.response.data.errors.email) {
+            setError(error.response.data.errors.email[0]);
+          } else if (error.response.data.errors.password) {
+            setError(error.response.data.errors.password[0]);
+          } else if (error.response.data.errors.handle) {
+            setError(error.response.data.errors.handle[0]);
+          } else {
+            // If no specific field error, use the detail
+            setError(error.response.data.detail);
+          }
         } else if (error.response.data.detail) {
           setError(error.response.data.detail);
         } else {
-          setError("Signup failed, an unknown error occured");
+          setError("Signup failed, an unknown error occurred");
         }
       } else {
-        setError("Network error.");
+        setError("Network error. Please check your connection and try again.");
       }
-      console.log(error);
     }
     const refreshToken = localStorage.getItem("refreshToken");
     return refreshToken;

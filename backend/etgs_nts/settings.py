@@ -167,7 +167,7 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     ],
-    # Exception handling
+    # on handling
     "EXCEPTION_HANDLER": "users.api.exceptions.custom_exception_handler",
     # Throttling
     "DEFAULT_THROTTLE_CLASSES": [],

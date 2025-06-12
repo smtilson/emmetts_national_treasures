@@ -1,32 +1,29 @@
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import ListGroup from "./components/ListGroup.jsx";
-import LoginForm from "./components/auth/Login.jsx";
+import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useGlobalContext } from "./contexts/baseContext";
 import Profile from "./components/profile/Profile.jsx";
 
-function UnAuthForms() {
-  return (
-    <>
-      <SignUp />
-      <LoginForm />
-    </>
-  );
-}
+import {BrowserRouter as Router, Routes, Route, Navigate} from "react-router-dom"
+
 
 function App() {
-  const { user, isAuthenticated } = useGlobalContext();
+  const { isAuthenticated } = useGlobalContext();
   return (
-    <>
-      <Header /> {!isAuthenticated && <UnAuthForms />}
-      {isAuthenticated && <Profile/>}
-
-      <Footer />
-    </>
+    <Router>
+      <Routes>
+        <Route path='/' element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/signup" element={<SignUp/>}/>
+        
+      </Routes>
+    </Router>
   );
+/*<Route path="/treasures/:id" element={<TreasureDetail/>}/>*/
 }
 
 function Counters() {

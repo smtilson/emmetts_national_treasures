@@ -39,7 +39,7 @@ def custom_exception_handler(exc, context):
         detail = str(exc)
         response = Response(
             {"detail": detail, "error_type": exc.__class__.__name__},
-            status=status.HTTP_500_INTERNAL_ERROR,
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
     # Process specific exception types

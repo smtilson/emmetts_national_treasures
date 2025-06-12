@@ -36,12 +36,12 @@ class UserViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all().order_by("date_joined")
     serializer_class = UserSerializer
-    
+
     def get_permissions(self):
         """
         Instantiates and returns the list of permissions that this view requires.
         """
-        if self.action in ['update', 'partial_update', 'destroy']:
+        if self.action in ["update", "partial_update", "destroy"]:
             permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
         else:
             permission_classes = [IsAuthenticated]
@@ -67,7 +67,7 @@ class SignupView(CreateAPIView):
         user = self.perform_create(serializer)
 
         refresh = RefreshToken.for_user(user)
-        refresh['handle'] = user.handle
+        refresh["handle"] = user.handle
         data = serializer.data
         data["access"] = str(refresh.access_token)
         data["refresh"] = str(refresh)

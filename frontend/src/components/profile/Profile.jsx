@@ -2,14 +2,20 @@ import React, { useState, useEffect } from "react";
 import { useGlobalContext } from "../../contexts/baseContext";
 import SetHandleForm from "./SetHandleForm";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Profile() {
   const { user, backendURL, isAuthenticated } = useGlobalContext();
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
     const fetchUserDetails = async () => {
       try {
         const accessToken = localStorage.getItem("accessToken");
@@ -39,7 +45,7 @@ function Profile() {
     } else {
       setLoading(false);
     }
-  }, [user, backendURL, isAuthenticated]);
+  }, [user, backendURL, isAuthenticated, navigate]);
 
   if (loading) {
     return <div>Loading Profile...</div>;
